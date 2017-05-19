@@ -7,6 +7,19 @@ function initDatabase() {
 
   database.transaction(function(transaction) {
     transaction.executeSql('CREATE TABLE SampleTable (name, score)');
+
+    tx.executeSql(
+      'CREATE TABLE IF NOT EXISTS podcasts ' +
+        '(url PRIMARY KEY, title, link, pubDate INTEGER, description,' +
+        'image, iamgeOfflinePath);');
+    
+    tx.executeSql(
+      'CREATE TABLE IF NOT EXISTS episodes ' +
+        '(podcastUrl, guid, title, link, pubDate INTEGER, description,' +
+          'imageOfflinePath,' +
+          'enclosureUrl, enclosureLength, enclosureType, enclosureOfflinePath,'+
+          'finished INTEGER, playingPosition, duration, lastTimePlayed INTEGER,' +
+          'FOREIGN KEY (podcastUrl) REFERENCES podcasts(url) );');
   });
 }
 
@@ -145,6 +158,32 @@ document.addEventListener('deviceready', function() {
   $('#add-json-records-after-delay').click(addJSONRecordsAfterDelay);
   $('#delete-records').click(deleteRecords);
   $('#location-page2').click(goToPage2);
+  $('#add-with-unicode-u2028').click(addWithUnicodeU2028);
+  $('#select-all').click(selectAll);
 
   initDatabase();
 });
+
+function addWithUnicodeU2028() {
+  database.transaction(function(transaction) {
+    transaction.executeSql('INSERT INTO SampleTable VALUES (?,?)', ['User \u2028', 1]);
+  }, function(error) {
+    navigator.notification.alert('INSERT error: ' + error.message);
+  }, function() {
+    navigator.notification.alert('INSERT OK');
+    // ++nextUser;
+  });
+}
+
+function selectAll() {
+  database.readTransaction(function(transaction) {
+    database.executeSql('SELECT * FROM SampleTable', [], function(ignored, resultSet) {
+      navigator.notification.alert('Results available OK');
+    });
+  }, function(error) {
+    navigator.notification.alert('Select ERROR:' + error.message);
+  }, function() {
+    // navigator.notification.alert('Select OK');
+    // ++nextUser;
+  });
+}
